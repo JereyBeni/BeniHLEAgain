@@ -1,82 +1,68 @@
-//! BeniAudio experimental microphone support.
+//! Experimental BeniAudio microphone support.
 //!
-//! This module is intentionally kept separate from the original
-//! AudioToolbox implementation while microphone support is being tested.
-//
-//! IMPORTANT:
-//! AudioQueueNewInput currently returns an error instead of pretending
-//! that a valid AudioQueue was created. This prevents Unity from receiving
-//! a NULL/invalid AudioQueue handle and subsequently crashing.
+//! This module is currently used for crash testing.
+//! AudioQueueNewInput intentionally returns an error instead of
+//! pretending that a valid AudioQueue was created.
 
 use crate::environment::Environment;
 use crate::mem::Ptr;
 use crate::objc::id;
 
-/// Generic AudioToolbox error used for the temporary microphone test.
+/// Temporary error used while testing microphone initialization.
 ///
-/// We intentionally use a non-zero error code here. The important part of
-/// this test is that AudioQueueNewInput does NOT report success when no
-/// actual AudioQueue object exists.
+/// We do NOT create a real AudioQueue yet.
 const BENI_AUDIO_MICROPHONE_UNAVAILABLE: i32 = -1;
 
-/// Experimental AudioQueueNewInput implementation.
-///
-/// At the moment this function does not create a real audio queue.
-/// Returning an error allows Unity to gracefully disable microphone input
-/// instead of receiving a successful result with an invalid queue handle.
+// -----------------------------------------------------------------------------
+// Audio Queue
+// -----------------------------------------------------------------------------
+
 pub fn audio_queue_new_input(
     _env: &mut Environment,
-    _format: Ptr<()>,
-    _callback: Ptr<()>,
-    _user_data: Ptr<()>,
+    _format: Ptr<(), false>,
+    _callback: Ptr<(), false>,
+    _user_data: Ptr<(), false>,
     _run_loop: id,
     _run_loop_mode: id,
     _flags: u32,
-    _out_aq: Ptr<Ptr<()>>,
+    _out_aq: Ptr<Ptr<(), false>, true>,
 ) -> i32 {
     log!(
         "[BeniAudio] AudioQueueNewInput called - \
-         microphone temporarily disabled for crash testing."
+         microphone disabled for crash testing."
     );
 
+    // IMPORTANT:
+    // Do not return success here because no AudioQueue object exists.
     BENI_AUDIO_MICROPHONE_UNAVAILABLE
 }
 
-/// Experimental AudioQueueStart implementation.
-///
-/// This should not normally be reached while AudioQueueNewInput is
-/// returning an error.
 pub fn audio_queue_start(
     _env: &mut Environment,
-    _aq: Ptr<()>,
-    _start_time: Ptr<()>,
+    _aq: Ptr<(), false>,
+    _start_time: Ptr<(), false>,
 ) -> i32 {
     log!(
-        "[BeniAudio] AudioQueueStart called while microphone backend \
-         is disabled."
+        "[BeniAudio] AudioQueueStart called while \
+         microphone backend is disabled."
     );
 
     BENI_AUDIO_MICROPHONE_UNAVAILABLE
 }
 
-/// Experimental AudioQueueStop implementation.
 pub fn audio_queue_stop(
     _env: &mut Environment,
-    _aq: Ptr<()>,
+    _aq: Ptr<(), false>,
     _immediate: bool,
 ) -> i32 {
-    log!(
-        "[BeniAudio] AudioQueueStop called while microphone backend \
-         is disabled."
-    );
+    log!("[BeniAudio] AudioQueueStop called.");
 
     0
 }
 
-/// Experimental AudioQueueDispose implementation.
 pub fn audio_queue_dispose(
     _env: &mut Environment,
-    _aq: Ptr<()>,
+    _aq: Ptr<(), false>,
     _immediate: bool,
 ) -> i32 {
     log!("[BeniAudio] AudioQueueDispose called.");
@@ -84,42 +70,37 @@ pub fn audio_queue_dispose(
     0
 }
 
-/// Experimental AudioQueueAllocateBuffer implementation.
-///
-/// This does not allocate a real AudioQueue buffer yet.
 pub fn audio_queue_allocate_buffer(
     _env: &mut Environment,
-    _aq: Ptr<()>,
-    _buffer_size: u32,
-    _out_buffer: Ptr<Ptr<()>>,
+    _aq: Ptr<(), false>,
+    buffer_size: u32,
+    _out_buffer: Ptr<Ptr<(), false>, true>,
 ) -> i32 {
     log!(
         "[BeniAudio] AudioQueueAllocateBuffer called \
-         (size: {}) while microphone backend is disabled.",
-        _buffer_size
+         (size={}) while microphone backend is disabled.",
+        buffer_size
     );
 
     BENI_AUDIO_MICROPHONE_UNAVAILABLE
 }
 
-/// Experimental AudioQueueFreeBuffer implementation.
 pub fn audio_queue_free_buffer(
     _env: &mut Environment,
-    _aq: Ptr<()>,
-    _buffer: Ptr<()>,
+    _aq: Ptr<(), false>,
+    _buffer: Ptr<(), false>,
 ) -> i32 {
     log!("[BeniAudio] AudioQueueFreeBuffer called.");
 
     0
 }
 
-/// Experimental AudioQueueEnqueueBuffer implementation.
 pub fn audio_queue_enqueue_buffer(
     _env: &mut Environment,
-    _aq: Ptr<()>,
-    _buffer: Ptr<()>,
+    _aq: Ptr<(), false>,
+    _buffer: Ptr<(), false>,
     _num_packets: u32,
-    _packet_descs: Ptr<()>,
+    _packet_descs: Ptr<(), false>,
 ) -> i32 {
     log!(
         "[BeniAudio] AudioQueueEnqueueBuffer called \
@@ -129,9 +110,10 @@ pub fn audio_queue_enqueue_buffer(
     BENI_AUDIO_MICROPHONE_UNAVAILABLE
 }
 
-/// AudioServicesPlaySystemSound stub.
-///
-/// This is kept here for future BeniAudio system-sound support.
+// -----------------------------------------------------------------------------
+// Audio Services
+// -----------------------------------------------------------------------------
+
 pub fn audio_services_play_system_sound(
     _env: &mut Environment,
     sound_id: u32,
@@ -142,11 +124,10 @@ pub fn audio_services_play_system_sound(
     );
 }
 
-/// AudioServicesCreateSystemSoundID stub.
 pub fn audio_services_create_system_sound_id(
     _env: &mut Environment,
     _file_url: id,
-    _out_sound_id: Ptr<u32>,
+    _out_sound_id: Ptr<u32, true>,
 ) -> i32 {
     log!(
         "[BeniAudio] AudioServicesCreateSystemSoundID called."
@@ -155,7 +136,6 @@ pub fn audio_services_create_system_sound_id(
     0
 }
 
-/// AudioServicesDisposeSystemSoundID stub.
 pub fn audio_services_dispose_system_sound_id(
     _env: &mut Environment,
     sound_id: u32,
@@ -168,20 +148,22 @@ pub fn audio_services_dispose_system_sound_id(
     0
 }
 
-/// AudioSessionInitialize stub.
+// -----------------------------------------------------------------------------
+// Audio Session
+// -----------------------------------------------------------------------------
+
 pub fn audio_session_initialize(
     _env: &mut Environment,
-    _run_loop: Ptr<()>,
-    _run_loop_mode: Ptr<()>,
-    _interruption_listener: Ptr<()>,
-    _user_data: Ptr<()>,
+    _run_loop: Ptr<(), false>,
+    _run_loop_mode: Ptr<(), false>,
+    _interruption_listener: Ptr<(), false>,
+    _user_data: Ptr<(), false>,
 ) -> i32 {
     log!("[BeniAudio] AudioSessionInitialize called.");
 
     0
 }
 
-/// AudioSessionSetActive stub.
 pub fn audio_session_set_active(
     _env: &mut Environment,
     active: bool,
@@ -194,12 +176,11 @@ pub fn audio_session_set_active(
     0
 }
 
-/// AudioSessionSetProperty stub.
 pub fn audio_session_set_property(
     _env: &mut Environment,
     property_id: u32,
     data_size: u32,
-    _property_data: Ptr<()>,
+    _property_data: Ptr<(), false>,
 ) -> i32 {
     log!(
         "[BeniAudio] AudioSessionSetProperty(\
@@ -211,12 +192,11 @@ pub fn audio_session_set_property(
     0
 }
 
-/// AudioSessionGetProperty stub.
 pub fn audio_session_get_property(
     _env: &mut Environment,
     property_id: u32,
-    _io_data_size: Ptr<u32>,
-    _out_property_data: Ptr<()>,
+    _io_data_size: Ptr<u32, true>,
+    _out_property_data: Ptr<(), true>,
 ) -> i32 {
     log!(
         "[BeniAudio] AudioSessionGetProperty({})",
