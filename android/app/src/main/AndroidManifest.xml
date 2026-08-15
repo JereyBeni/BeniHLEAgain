@@ -6,9 +6,6 @@
    - Parts of this file are derived from SDL 2's Android project template, which
    - has a different license. Please see vendor/SDL/LICENSE.txt for details. -->
 
-<!-- Replace com.test.game with the identifier of your game below, e.g.
-     com.gamemaker.game
--->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     android:installLocation="auto"
     android:versionCode="1">
@@ -36,25 +33,16 @@
         android:name="android.hardware.type.pc"
         android:required="false" />
 
-    <!-- Audio recording support -->
-    <!-- if you want to capture audio, uncomment this. -->
-    <!-- <uses-feature
+    <!-- Audio recording support (ACTIVADO PARA BENIAUDIO / TALKING FRIENDS) -->
+    <uses-feature
         android:name="android.hardware.microphone"
-        android:required="false" /> -->
-
-    <!-- Allow downloading to the external storage on Android 5.1 and older -->
-    <!-- <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="22" /> -->
-
-    <!-- Allow access to Bluetooth devices -->
-    <!-- Currently this is just for Steam Controller support and requires setting SDL_HINT_JOYSTICK_HIDAPI_STEAM -->
-    <!-- <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" /> -->
-    <!-- <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" /> -->
+        android:required="false" />
 
     <!-- Allow access to the vibrator -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- if you want to capture audio, uncomment this. -->
-    <!-- <uses-permission android:name="android.permission.RECORD_AUDIO" /> -->
+    <!-- Permiso nativo para capturar audio en el dispositivo Android -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
         android:allowBackup="true"
@@ -62,10 +50,6 @@
         android:icon="${icon}"
         android:label="@string/app_name"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
-
-        <!-- Example of setting SDL hints from AndroidManifest.xml:
-        <meta-data android:name="SDL_ENV.SDL_ACCELEROMETER_AS_JOYSTICK" android:value="0"/>
-         -->
 
         <activity
             android:name="org.touchhle.android.MainActivity"
@@ -78,18 +62,10 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Let Android know that we can handle some USB devices and should receive this event -->
+            <!-- USB attached event -->
             <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
             </intent-filter>
-            <!-- Drop file event -->
-            <!--
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="*/*" />
-            </intent-filter>
-            -->
         </activity>
 
         <provider
