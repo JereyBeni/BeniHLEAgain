@@ -4,11 +4,32 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-//! The AudioToolbox framework.
+//! Implementation of the AudioToolbox framework.
 
 use crate::audio::openal::{OpenAL, OpenALContext, OpenALManager};
 
-// AudioToolbox submodules
+/// Macro used by AudioToolbox functions to reject NULL parameters.
+///
+/// This macro is exported at crate level so the AudioToolbox child
+/// modules can use it.
+#[macro_export]
+macro_rules! return_if_null {
+    ($param:ident) => {
+        if $param.is_null() {
+            log_dbg!(
+                "Received NULL parameter {}, returning paramErr in {}:{}",
+                stringify!($param),
+                file!(),
+                line!()
+            );
+
+            return crate::frameworks::carbon_core::paramErr;
+        }
+    };
+}
+
+// AudioToolbox submodules.
+
 pub mod au_graph;
 pub mod audio_components;
 pub mod audio_converter;
@@ -19,25 +40,10 @@ pub mod audio_session;
 pub mod audio_unit;
 pub mod ext_audio_file;
 
-// BeniAudio support
+// BeniAudio support.
 pub mod guestaudio;
 
-/// Macro used by AudioToolbox functions to reject NULL parameters.
-macro_rules! return_if_null {
-    ($param:ident) => {
-        if $param.is_null() {
-            log_dbg!(
-                "Received NULL parameter {}, returning paramErr in {}:{}",
-                stringify!($param),
-                file!(),
-                line!()
-            );
-            return crate::frameworks::carbon_core::paramErr;
-        }
-    };
-}
-
-/// AudioToolbox framework state.
+/// Container for AudioToolbox state.
 #[derive(Default)]
 pub struct State {
     pub(crate) audio_file: audio_file::State,
@@ -52,6 +58,7 @@ pub struct State {
 }
 
 impl State {
+    /// Makes the AudioToolbox OpenAL context current.
     pub fn make_al_context_current<'s, 'manager: 's>(
         &'s mut self,
         manager: &'manager mut OpenALManager,
@@ -108,7 +115,7 @@ impl LazyALContext {
         manager: &mut OpenALManager,
     ) -> &mut OpenALContext {
         if self.try_get_context(manager).is_some() {
-            // The context now exists.
+            // Context was successfully created.
         }
 
         self.0
@@ -119,7 +126,7 @@ impl LazyALContext {
     }
 }
 
-/// AudioToolbox dynamic library definition.
+/// AudioToolbox dynamic library.
 pub const DYLIB: crate::dyld::HostDylib = crate::dyld::HostDylib {
     path: "/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox",
 
@@ -142,8 +149,5 @@ pub const DYLIB: crate::dyld::HostDylib = crate::dyld::HostDylib {
         audio_session::FUNCTIONS,
         audio_unit::FUNCTIONS,
         ext_audio_file::FUNCTIONS,
-
-        // BeniAudio exports.
-        guestaudio::FUNCTIONS,
     ],
 };
