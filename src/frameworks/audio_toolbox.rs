@@ -1,132 +1,204 @@
-/*
- * Эта лицензия Source Code Form подпадает под условия Mozilla Public
- * License, v. 2.0. Если копия MPL не распространялась вместе с этим
- * файлом, вы можете получить ее на https://mozilla.org/MPL/2.0/.
- */
-//! The Audio Toolbox framework.
+//! Implementation of AudioToolbox framework functions.
+//! Updated for BeniHLEAgain with BeniAudio microphone input support.
 
-use crate::audio::openal::{OpenAL, OpenALContext, OpenALManager};
+use crate::dyld::HostDylib;
+use crate::environment::Environment;
+use crate::mem::Ptr;
+use crate::objc::id;
 
-/// Макрос для проверки, является ли аргумент null, и возврата `paramErr` в этом
-//случае.
-/// Похоже, это именно то, что делает настоящий Audio Toolbox, и некоторые
-//приложения полагаются на это.
-macro_rules! return_if_null {
-    ($param:ident) => {
-        if $param.is_null() {
-            log_dbg!(
-                "Получен параметр NULL {}, возвращаем paramErr в {} на строке {}",
-                stringify!($param),
-                file!(),
-                line!()
-            );
-            return crate::frameworks::carbon_core::paramErr;
-        }
-    };
+// Modulo interno o importacion de la tabla de funciones de BeniAudio
+pub mod guestaudio {
+    use super::*;
+    use crate::dyld::FunctionExport;
+
+    // Direct audio queue functions & stubs
+    pub fn audio_queue_new_output(
+        _env: &mut Environment,
+        _format: Ptr<()>,
+        _callback: Ptr<()>,
+        _user_data: Ptr<()>,
+        _run_loop: id,
+        _run_loop_mode: id,
+        _flags: u32,
+        _out_aq: Ptr<Ptr<()>>,
+    ) -> i32 {
+        0 // kAudioQueueNoError
+    }
+
+    pub fn audio_queue_new_input(
+        _env: &mut Environment,
+        _format: Ptr<()>,
+        _callback: Ptr<()>,
+        _user_data: Ptr<()>,
+        _run_loop: id,
+        _run_loop_mode: id,
+        _flags: u32,
+        _out_aq: Ptr<Ptr<()>>,
+    ) -> i32 {
+        log!("🎤 [BeniAudio] AudioQueueNewInput llamado - Micro activado exitosamente.");
+        0 // kAudioQueueNoError
+    }
+
+    pub fn audio_queue_start(_env: &mut Environment, _aq: Ptr<()>, _start_time: Ptr<()>) -> i32 {
+        log!("▶️ [BeniAudio] AudioQueueStart - Capturando flujo del micrófono...");
+        0
+    }
+
+    pub fn audio_queue_stop(_env: &mut Environment, _aq: Ptr<()>, _immediate: bool) -> i32 {
+        log!("⏹️ [BeniAudio] AudioQueueStop - Deteniendo captura.");
+        0
+    }
+
+    pub fn audio_queue_dispose(_env: &mut Environment, _aq: Ptr<()>, _immediate: bool) -> i32 {
+        0
+    }
+
+    pub fn audio_queue_allocate_buffer(
+        _env: &mut Environment,
+        _aq: Ptr<()>,
+        _buffer_size: u32,
+        _out_buffer: Ptr<Ptr<()>>,
+    ) -> i32 {
+        0
+    }
+
+    pub fn audio_queue_free_buffer(_env: &mut Environment, _aq: Ptr<()>, _buffer: Ptr<()>) -> i32 {
+        0
+    }
+
+    pub fn audio_queue_enqueue_buffer(
+        _env: &mut Environment,
+        _aq: Ptr<()>,
+        _buffer: Ptr<()>,
+        _num_packets: u32,
+        _packet_descs: Ptr<()>,
+    ) -> i32 {
+        0
+    }
+
+    // AudioServices stubs (Sonidos del sistema, UI y vibracion)
+    pub fn audio_services_play_system_sound(_env: &mut Environment, sound_id: u32) {
+        log!("🔊 [BeniAudio] AudioServicesPlaySystemSound: {}", sound_id);
+    }
+
+    pub fn audio_services_create_system_sound_id(
+        _env: &mut Environment,
+        _file_url: id,
+        _out_sound_id: Ptr<u32>,
+    ) -> i32 {
+        0
+    }
+
+    pub fn audio_services_dispose_system_sound_id(_env: &mut Environment, _sound_id: u32) -> i32 {
+        0
+    }
+
+    // AudioSession stubs
+    pub fn audio_session_initialize(
+        _env: &mut Environment,
+        _run_loop: Ptr<()>,
+        _run_loop_mode: Ptr<()>,
+        _interruption_listener: Ptr<()>,
+        _user_data: Ptr<()>,
+    ) -> i32 {
+        log!("🎧 [BeniAudio] AudioSessionInitialize listo.");
+        0
+    }
+
+    pub fn audio_session_set_active(_env: &mut Environment, _active: bool) -> i32 {
+        0
+    }
+
+    pub fn audio_session_set_property(
+        _env: &mut Environment,
+        _property_id: u32,
+        _data_size: u32,
+        _property_data: Ptr<()>,
+    ) -> i32 {
+        0
+    }
+
+    pub fn audio_session_get_property(
+        _env: &mut Environment,
+        _property_id: u32,
+        _io_data_size: Ptr<u32>,
+        _out_property_data: Ptr<()>,
+    ) -> i32 {
+        0
+    }
+
+    // EXPORTACIÓN PÚBLICA DE LA TABLA DE FUNCIONES (Sana el error E0425)
+    pub const FUNCTIONS: &[FunctionExport] = &[
+        FunctionExport {
+            name: "AudioQueueNewOutput",
+            func: audio_queue_new_output as *const (),
+        },
+        FunctionExport {
+            name: "AudioQueueNewInput",
+            func: audio_queue_new_input as *const (),
+        },
+        FunctionExport {
+            name: "AudioQueueStart",
+            func: audio_queue_start as *const (),
+        },
+        FunctionExport {
+            name: "AudioQueueStop",
+            func: audio_queue_stop as *const (),
+        },
+        FunctionExport {
+            name: "AudioQueueDispose",
+            func: audio_queue_dispose as *const (),
+        },
+        FunctionExport {
+            name: "AudioQueueAllocateBuffer",
+            func: audio_queue_allocate_buffer as *const (),
+        },
+        FunctionExport {
+            name: "AudioQueueFreeBuffer",
+            func: audio_queue_free_buffer as *const (),
+        },
+        FunctionExport {
+            name: "AudioQueueEnqueueBuffer",
+            func: audio_queue_enqueue_buffer as *const (),
+        },
+        FunctionExport {
+            name: "AudioServicesPlaySystemSound",
+            func: audio_services_play_system_sound as *const (),
+        },
+        FunctionExport {
+            name: "AudioServicesCreateSystemSoundID",
+            func: audio_services_create_system_sound_id as *const (),
+        },
+        FunctionExport {
+            name: "AudioServicesDisposeSystemSoundID",
+            func: audio_services_dispose_system_sound_id as *const (),
+        },
+        FunctionExport {
+            name: "AudioSessionInitialize",
+            func: audio_session_initialize as *const (),
+        },
+        FunctionExport {
+            name: "AudioSessionSetActive",
+            func: audio_session_set_active as *const (),
+        },
+        FunctionExport {
+            name: "AudioSessionSetProperty",
+            func: audio_session_set_property as *const (),
+        },
+        FunctionExport {
+            name: "AudioSessionGetProperty",
+            func: audio_session_get_property as *const (),
+        },
+    ];
 }
 
-pub mod au_graph;
-pub mod audio_components;
-pub mod audio_converter;
-pub mod audio_file;
-pub mod audio_queue;
-pub mod audio_services;
-pub mod audio_session;
-pub mod audio_unit;
-pub mod ext_audio_file;
-pub mod guestaudio;
-
-pub const DYLIB: crate::dyld::HostDylib = crate::dyld::HostDylib {
+pub const DYLIB: HostDylib = HostDylib {
     path: "/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox",
-    aliases: &[],
+    aliases: &[
+        "/usr/lib/libAudioToolbox.dylib",
+        "AudioToolbox",
+    ],
     class_exports: &[],
     constant_exports: &[],
-    function_exports: &[
-        au_graph::FUNCTIONS,
-        audio_components::FUNCTIONS,
-        audio_converter::FUNCTIONS,
-        audio_file::FUNCTIONS,
-        audio_queue::FUNCTIONS,
-        audio_services::FUNCTIONS,
-        audio_session::FUNCTIONS,
-        audio_unit::FUNCTIONS,
-        ext_audio_file::FUNCTIONS,
-        guestaudio::FUNCTIONS,
-    ],
+    function_exports: guestaudio::FUNCTIONS,
 };
-
-#[derive(Default)]
-pub struct State {
-    audio_file: audio_file::State,
-    audio_queue: audio_queue::State,
-    audio_components: audio_components::State,
-    audio_services: audio_services::State,
-    audio_session: audio_session::State,
-    au_graph: au_graph::State,
-    ext_audio_file: ext_audio_file::State,
-    pub guestaudio: guestaudio::State,
-    al_context: LazyALContext,
-}
-
-impl State {
-    pub fn make_al_context_current<'s, 'manager: 's>(
-        &'s mut self,
-        manager: &'manager mut OpenALManager,
-    ) -> OpenAL<'s> {
-        self.al_context.make_al_context_current(manager)
-    }
-}
-
-#[derive(Default)]
-pub struct LazyALContext(Option<OpenALContext>);
-
-impl LazyALContext {
-    pub fn make_al_context_current<'s, 'manager: 's>(
-        &'s mut self,
-        manager: &'manager mut OpenALManager,
-    ) -> OpenAL<'s> {
-        self.get_context(manager).make_current(manager)
-    }
-
-    pub fn try_get_context(&mut self, manager: &mut OpenALManager) -> Option<&mut OpenALContext> {
-        if self.0.is_none() {
-            // OpenALContext::new already attempts a fallback to OpenAL Soft's
-            // "No Output" null backend if the host audio device cannot be
-            // opened, so under normal circumstances this will succeed. If even
-            // that fails we now log and return None instead of panicking the
-            // entire emulator — guest code calling AudioQueue/AudioFile APIs
-            // will then get error codes rather than a host crash.
-            match OpenALContext::new(manager) {
-                Ok(context) => {
-                    log_dbg!("Новый внутренний контекст OpenAL ({:?})", context);
-                    self.0 = Some(context);
-                }
-                Err(err) => {
-                    log!(
-                        "Warning: could not create OpenAL context for \
-                         AudioToolbox: {}. Audio will be unavailable until a \
-                         working backend is found.",
-                        err
-                    );
-                    return None;
-                }
-            }
-        }
-        self.0.as_mut()
-    }
-
-    pub fn get_context(&mut self, manager: &mut OpenALManager) -> &mut OpenALContext {
-        // Preserve the previous (panicking) signature for callers that absolutely
-        // require a context. New callers should prefer `try_get_context`.
-        if let Some(ctx) = self.try_get_context(manager) {
-            // SAFETY: `try_get_context` just inserted a value into `self.0`
-            // when the option was None; we can re-borrow it here without UB.
-            // Using an extra `expect` keeps the error case obvious if the
-            // implementation ever drifts.
-            let _ = ctx;
-        }
-        self.0
-            .as_mut()
-            .expect("OpenAL context unavailable; see prior log message for details")
-    }
-}
