@@ -34,6 +34,7 @@ pub mod audio_services;
 pub mod audio_session;
 pub mod audio_unit;
 pub mod ext_audio_file;
+pub mod guestaudio;
 
 pub const DYLIB: crate::dyld::HostDylib = crate::dyld::HostDylib {
     path: "/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox",
@@ -50,6 +51,7 @@ pub const DYLIB: crate::dyld::HostDylib = crate::dyld::HostDylib {
         audio_session::FUNCTIONS,
         audio_unit::FUNCTIONS,
         ext_audio_file::FUNCTIONS,
+        guestaudio::FUNCTIONS,
     ],
 };
 
@@ -62,8 +64,10 @@ pub struct State {
     audio_session: audio_session::State,
     au_graph: au_graph::State,
     ext_audio_file: ext_audio_file::State,
+    pub guestaudio: guestaudio::State,
     al_context: LazyALContext,
 }
+
 impl State {
     pub fn make_al_context_current<'s, 'manager: 's>(
         &'s mut self,
@@ -83,6 +87,7 @@ impl LazyALContext {
     ) -> OpenAL<'s> {
         self.get_context(manager).make_current(manager)
     }
+
     pub fn try_get_context(&mut self, manager: &mut OpenALManager) -> Option<&mut OpenALContext> {
         if self.0.is_none() {
             // OpenALContext::new already attempts a fallback to OpenAL Soft's
