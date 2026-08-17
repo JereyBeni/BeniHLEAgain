@@ -2,20 +2,35 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+Security updates are provided for the actively maintained versions of RayHLE.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| Version | Supported |
+| ------- | --------- |
+| 7.1.x   | ✅ |
+| 7.0.x   | ✅ |
+| 6.x     | ✅ |
+| 5.x     | ✅ |
+| 4.x     | ✅ |
+| 3.x     | ✅ |
+| 2.x     | ✅ |
+| < 2.0   | ❌ |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+If you discover a security vulnerability in RayHLE, please report it privately to the project maintainers.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+**Please do not publicly disclose the vulnerability until it has been investigated.**
+
+When reporting a vulnerability, include:
+
+- A description of the vulnerability
+- Steps to reproduce it
+- The affected RayHLE version
+- Logs, crash reports, or other relevant information
+- A proof of concept, if available
+
+We will review security reports and provide an update once the issue has been investigated.
+
+If the vulnerability is confirmed, we will work on a fix and release it as soon as reasonably possible.
+
+Thank you for helping keep RayHLE secure. 🫡
