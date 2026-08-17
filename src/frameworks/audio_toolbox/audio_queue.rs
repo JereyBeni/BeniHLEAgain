@@ -1845,7 +1845,7 @@ pub fn AudioQueueNewInput(
         aq_is_running_proc: None,
         aq_is_running_user_data: None,
         is_running_handler: false,
-        is_input: false,
+        is_input: true,
         input_delay: 0,
         hardware_codec_policy: codec_policy::DEFAULT,
         offline_render_format: None,
