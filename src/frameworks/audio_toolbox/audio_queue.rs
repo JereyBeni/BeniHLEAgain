@@ -1560,13 +1560,27 @@ pub fn AudioQueueStart(
         return kAudioQueueErr_InvalidProperty;
     };
 
+    // ---------- CAMINO DE MICRÓFONO / INPUT ----------
+    if host_object.is_input {
+        log_dbg!("AudioQueueStart: starting INPUT queue {:?}", in_aq);
+
+        host_object.is_running = AudioQueueIsRunning::Running;
+
+        // Por ahora no capturamos el mic real del host.
+        // Solo marcamos la cola como running para que las apps
+        // no se cuelguen. El siguiente paso será alimentar
+        // buffers con silencio o con captura real y llamar
+        // al callback de input.
+
+        notify_aq_is_running(env, in_aq);
+        return 0;
+    }
+
+    // ---------- CAMINO NORMAL DE OUTPUT / PLAYBACK ----------
     if is_supported_audio_format(&host_object.format) {
         host_object.is_running = AudioQueueIsRunning::Running;
 
         let Some(al_source) = host_object.al_source else {
-            // prime_audio_queue should have created the OpenAL source, but
-            // it bails out early for unsupported formats and missing
-            // queues. Don't panic if we somehow get here without a source.
             log!(
                 "Warning: AudioQueueStart({:?}) found no OpenAL source after \
                  priming; skipping playback.",
